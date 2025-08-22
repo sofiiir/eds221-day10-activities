@@ -1,0 +1,121 @@
+---
+title: "north-temperate-lakes"
+format: html
+---
+Read in data 
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+```
+Reading in meteorlogical data and ice duration data. 
+```{r}
+ice_duration <- read_csv(here::here("data", "knb-lter-ntl.33.35", "ntl33_v7.csv"), na = c("-999"))
+
+met_data <- read_csv(here::here("data", "knb-lter-ntl.20.32", "ntl20_v6.csv"))
+```
+Joining data
+```{r}
+met_ice_data <- ice_duration |> 
+  full_join(met_data, by = "year4")
+
+# class(ice_duration$year4)
+
+# met_ice_data_fact <- met_ice_data |> 
+ # mutate(year = as.factor(year4))
+
+# class(met_ice_data_fact$year)
+```
+
+grouping data to calculate mean of each lake
+```{r}
+
+gr_by_lake <- ice_duration |> 
+  group_by(lakeid) |> 
+  summarise(mean = mean(ice_duration, na.rm = TRUE))
+```
+
+graphing both the mean and the actual values of ice duration.
+```{r}
+ggplot()+
+  geom_boxplot(data = ice_duration, aes(x = ice_duration, y = lakeid)) +
+  labs(title = "Madison Lake Area Lake Area Ice Duration", 
+       x = "Ice duration",
+       y = "Lake")
+  #geom_point(data = gr_by_lake, aes(x = mean, y = lakeid)) #this line would doubly count the mean 
+```
+Finding the mean ice cover duration in Madison Lake Area by year and graphing of them.
+
+```{r}
+class(ice_duration$year4)
+
+#Group_by should not be on numeric or integer
+met_ice_data_fact <- met_ice_data |> 
+ mutate(year = as.factor(year4))
+
+class(met_ice_data_fact$year)
+
+
+gr_by_year <- met_ice_data_fact |> 
+  drop_na(ice_duration) |> 
+  group_by(year) |> 
+  summarise(ice_duration_mean = mean(ice_duration)) |> 
+  ungroup()
+
+ggplot(data = gr_by_year, aes(x= year, y= ice_duration_mean)) +
+  geom_point(size = 0.3) +
+  geom_line(aes(x =as.integer(year), y = ice_duration_mean, color ="salmon")) +
+ scale_x_discrete(breaks = seq(from = 1850, to = 2020, by = 20)) + 
+  labs(title = "Mean Ice Duration by Year",
+       x = "Year",
+       y = "Mean Ice Duration")
+
+  
+
+```
+Overall, ice duration is in an overall decline throughout the years. This is indicative of world climate change trends. Note: Year is being represented differently as and integer and factor causing differences in graphing.
+
+
+Create a dataframe of mean air temp using the daily average air temperature.
+```{r}
+class(met_data$month)
+
+met_grp_by_year <- met_data |> 
+  filter(month %in% c(1, 12, 2)) |> 
+  group_by(year4) |> 
+  summarise(mean_air_temp = mean(ave_air_temp_adjusted))
+```
+
+Visualization of mean winter temperatures for the Madison Lake Area.
+```{r}
+ggplot(data = met_grp_by_year, aes(x = year4, y = mean_air_temp)) +
+  geom_point(size = 0.3) +
+  geom_line() + 
+  labs(title = "Mean Winter Temperatures for the Madison Lake Area",
+       x = "Year",
+       y = "Mean Air Temp (F)")
+  
+```
+The mean air temperature in the Madison Lake Area is increasing overall between 1869 to 2019. 
+
+```{r}
+#Changing the class for year to factor before joining the data tables
+met_grp_by_year <- met_grp_by_year |> 
+ mutate(year = as.factor(year4))
+
+class(met_grp_by_year$year)
+
+```
+
+Joining the dataframes showing the mean air temp and mean ice duration.
+```{r}
+mean_df <- met_grp_by_year |> 
+  full_join(gr_by_year, by = "year")
+```
+
+```{r}
+ggplot(data = mean_df, aes(x = mean_air_temp, y = ice_duration_mean)) +
+  geom_point()+
+  geom_line()
+```
+

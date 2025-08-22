@@ -1,0 +1,5 @@
+Manifest file for knb-lter-ntl.33.35.zip created on Fri Aug 22 20:32:32 UTC 2025
+ntl33_v7.csv (28021 bytes)
+knb-lter-ntl.33.35.xml (13476 bytes)
+knb-lter-ntl.33.35.txt (6739 bytes)
+knb-lter-ntl.33.35.report.xml (30728 bytes)
